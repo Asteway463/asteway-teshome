@@ -1,60 +1,80 @@
-// services-script.js
-
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- Smooth Scrolling for Navigation Links ---
-    document.querySelectorAll('nav a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-            e.preventDefault(); // Prevent default jump behavior
-
-            const targetId = this.getAttribute('href');
-            const targetElement = document.querySelector(targetId);
-
-            if (targetElement) {
-                targetElement.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
-            }
-        });
-    });
-
-    // --- Intersection Observer for Scroll-Reveal Animations ---
-    const revealElements = document.querySelectorAll('.reveal-on-scroll');
-    const revealChildElements = document.querySelectorAll('.reveal-on-scroll-child');
+    // ----------------------
+    // Skill Bar Animation
+    // ----------------------
+    const skillsSection = document.getElementById('skills');
+    const skillLevels = document.querySelectorAll('.skill-level');
+    let skillsAnimated = false;
 
     const observerOptions = {
-        root: null, // Use the viewport as the root
-        rootMargin: '0px', // No margin around the root
-        threshold: 0.2 // Trigger when 20% of the element is visible
+        root: null,
+        rootMargin: '0px',
+        threshold: 0.5
     };
 
-    const observer = new IntersectionObserver((entries, observer) => {
+    const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('is-visible');
-                // For the service cards specifically, add is-visible to their parent
-                // This triggers the staggered animation for individual cards via CSS
-                if (entry.target.classList.contains('services-list')) {
-                    const serviceCardsContainer = entry.target.querySelector('.service-cards');
-                    if (serviceCardsContainer) {
-                        serviceCardsContainer.classList.add('is-visible');
-                    }
-                }
-                observer.unobserve(entry.target); // Stop observing once visible
+            if (entry.isIntersecting && !skillsAnimated) {
+                animateSkills();
+                skillsAnimated = true;
+                observer.unobserve(entry.target);
             }
         });
     }, observerOptions);
 
-    // Observe each main section for reveal
-    revealElements.forEach(element => {
-        observer.observe(element);
+    const animateSkills = () => {
+        skillLevels.forEach(skill => {
+            const percent = skill.dataset.percent;
+            skill.style.width = percent + '%';
+        });
+    };
+
+    if (skillsSection) {
+        observer.observe(skillsSection);
+    }
+
+    // ----------------------
+    // Typing Animation
+    // ----------------------
+    const typingElement = document.querySelector('.typing');
+    const roles = ['Frontend Developer', 'UI/UX Designer', 'Web Developer'];
+    let roleIndex = 0;
+    let charIndex = 0;
+    let isDeleting = false;
+
+    function type() {
+        const currentRole = roles[roleIndex];
+        const currentText = currentRole.substring(0, charIndex);
+        typingElement.textContent = currentText;
+
+        if (!isDeleting && charIndex < currentRole.length) {
+            charIndex++;
+            setTimeout(type, 100);
+        } else if (isDeleting && charIndex > 0) {
+            charIndex--;
+            setTimeout(type, 50);
+        } else {
+            isDeleting = !isDeleting;
+            roleIndex = !isDeleting ? (roleIndex + 1) % roles.length : roleIndex;
+            setTimeout(type, 1000);
+        }
+    }
+    type();
+
+    // ----------------------
+    // Page Click Animation
+    // ----------------------
+    document.body.addEventListener('click', (event) => {
+        const clickEffect = document.createElement('div');
+        clickEffect.classList.add('click-effect');
+        clickEffect.style.left = event.clientX + 'px';
+        clickEffect.style.top = event.clientY + 'px';
+        document.body.appendChild(clickEffect);
+
+        setTimeout(() => {
+            clickEffect.remove();
+        }, 500);
     });
 
-    // Observe individual child elements for reveal (like profile image)
-    revealChildElements.forEach(element => {
-        observer.observe(element);
-    });
-
-    console.log("Services page loaded! JavaScript for scroll-reveal is active.");
 });
